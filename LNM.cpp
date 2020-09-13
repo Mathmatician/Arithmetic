@@ -184,6 +184,14 @@ std::string LNM::Add(std::string first, std::string second)
 	if (carry > 0)
 		result += std::to_string(carry);
 
+
+	// Shaves off zeros at the end of the decimals
+	while (result[0] == '0' && decPointStart)
+		result.erase(0, 1);
+	if (result[0] == '.')
+		result.erase(0, 1);
+
+
 	std::string RESULT = "";
 
 	if (isNegative)
@@ -399,13 +407,22 @@ std::string LNM::Subtract(std::string first, std::string second)
 
 		std::string vs = std::to_string(vf);
 
-		if (i == finNumOfDecs)
+		if (i == finNumOfDecs && finNumOfDecs > 0)
 			result += '.';
 		
 		result += vs[vs.length() - 1];
 
 		i++;
 	}
+
+
+	// Shaves off zeros at the end of the decimals
+	while (result[0] == '0' && decPointStart)
+		result.erase(0, 1);
+	if (result[0] == '.')
+		result.erase(0, 1);
+
+
 
 	std::string RESULT = "";
 	if (sIsBigger)
@@ -423,7 +440,7 @@ std::string LNM::Subtract(std::string first, std::string second)
 	{
 		if (RESULT[i] != '0' && RESULT[i] != '-')
 			break;
-		else if (RESULT[i] == '0')
+		else if (RESULT[i] == '0' && RESULT[i + 1] != '.')
 		{
 			RESULT.erase(i, 1);
 			i = 0;
@@ -530,6 +547,7 @@ std::string LNM::Multiply(std::string first, std::string second)
 	for (int i = 0; i < second.length(); i++)
 	{
 		std::string n_num = "";
+		carry = 0;
 		for (int j = 0; j < first.length(); j++)
 		{
 			int v1 = first[first.length() - 1 - j] - '0';
@@ -555,13 +573,14 @@ std::string LNM::Multiply(std::string first, std::string second)
 			carry = 0;
 		}
 
-		std::string N_NUM = "";
 
+		std::string N_NUM = "";
 		int len = n_num.length();
 		for (int k = len; k > 0; k--)
 		{
 			N_NUM += n_num[k - 1];
 		}
+
 
 		// tack on zeros
 		for (int k = 0; k < i; k++)
@@ -598,11 +617,24 @@ std::string LNM::Multiply(std::string first, std::string second)
 		}
 	}
 
+	// Shaves off zeros at the end of the decimals
+	while (flip_result[0] == '0')
+		flip_result.erase(0, 1);
+	if (flip_result[0] == '.')
+		flip_result.erase(0, 1);
+
 	std::string result = "";
 	for (i = flip_result.length(); i > 0; i--)
 		result += flip_result[i - 1];
 
-	if (isNegative)
+	while (result[0] == '0')
+		result.erase(0, 1);
+	if (result[0] == '.')
+		result.erase(0, 1);
+
+	if (result == "")
+		result = "0";
+	else if (isNegative)
 		return '-' + result;
 
 	return result;
@@ -635,12 +667,20 @@ std::string LNM::Divide(std::string first, std::string second)
 		second.erase(0, 1);
 	}
 
+
+	while (CheckForChar(first, '.') || CheckForChar(second, '.'))
+	{
+		first = Multiply(first, "10");
+		second = Multiply(second, "10");
+	}
+
+
+	bool isDecimal = false;
 	std::string result = "";
 
 	if (isNegative)
 		result = '-';
 	
-	bool isDecimal = false;
 	std::string precCount = "0";
 
 	if (second.length() > first.length())
@@ -664,7 +704,10 @@ std::string LNM::Divide(std::string first, std::string second)
 
 	while (i < first.length())
 	{
-		in_val += first[i];
+		if (in_val == "0")
+			in_val = first[i];
+		else
+			in_val += first[i];
 
 		int count = 0;
 		std::string tmp = in_val;
@@ -713,6 +756,8 @@ std::string LNM::Divide(std::string first, std::string second)
 		else
 			i++;
 	}
+
+
 
 	return result;
 }
