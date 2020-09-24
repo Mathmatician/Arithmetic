@@ -1,25 +1,245 @@
 #include "LNM.h"
-#include <string>
-#include <vector>
 
-LNM::LNM()
-{
-	num = "0";
-}
+std::string LNM::Pi = "3.1415926535897932384626433832795028841971693993751058";
+
+LNM::LNM(){ }
 
 LNM::LNM(std::string val)
 {
-	num = val;
+	if (val[0] == '-')
+	{
+		sub_negative = true;
+		val.erase(0, 1);
+	}
+	else
+		sub_negative = false;
+
+	int i = 0;
+	while (i < val.length())
+	{
+		if (val[i] == '.')
+			break;
+
+		integer.push_back(val[i] - '0');
+
+		i++;
+	}
+
+	if (val[i] == '.')
+		i++;
+
+	while (i < val.length())
+	{
+		decimals.push_back(val[i] - '0');
+		i++;
+	}
+
+	while (decimals.size() > 0 && decimals[decimals.size() - 1] == 0)
+		decimals.pop_back();
+
+	while (integer.size() > 0 && integer[0] == 0)
+		integer.erase(integer.begin(), integer.begin() + 1);
 }
 
 
-bool CheckForChar(std::string s, char c)
+void LNM::FlipSign()
 {
-	for (int i = 0; i < s.length(); i++)
-		if (s[i] == c)
-			return true;
+	if (!sub_negative)
+		sub_negative = true;
+	else
+		sub_negative = false;
+}
 
-	return false;
+
+
+
+// Alternative Addition Function
+void LNM::Alt_Add(std::vector<int> first, std::vector<int> second, bool isDec)
+{
+	if (isDec)
+	{
+		if (decimals.size() > 0)
+			decimals.clear();
+
+		if (first.size() > second.size())
+		{
+			while (first.size() > second.size())
+				second.push_back(0);
+		}
+		else if (first.size() < second.size())
+		{
+			while (first.size() < second.size())
+				first.push_back(0);
+		}
+	}
+	else if (integer.size() > 0)
+			integer.clear();
+
+	int len = 0;
+	if (first.size() > second.size())
+		len = first.size();
+	else
+		len = second.size();
+
+
+	int carry = 0;
+	if (integer_carry > 0)
+		carry = integer_carry;
+
+	for (int i = 0; i < len; i++)
+	{
+		int v = 0;
+		if (i < first.size() && i < second.size())
+			v = first[first.size() - 1 - i] + second[second.size() - 1 - i] + carry;
+		else if (i < first.size())
+			v = first[first.size() - 1 - i] + carry;
+		else if (i < second.size())
+			v = second[second.size() - 1 - i] + carry;
+
+		if (v > 9)
+		{
+			v -= 10;
+			carry = 1;
+		}
+		else
+			carry = 0;
+
+		if (isDec)
+			decimals.push_back(v);
+		else
+			integer.push_back(v);
+	}
+
+	if (carry > 0)
+	{
+		if (!isDec)
+			integer.push_back(carry);
+		else
+			integer_carry = carry;
+	}
+
+	if (!isDec)
+	{
+		while (integer.size() > 0 && integer[integer.size() - 1] == 0)
+			integer.pop_back();
+	}
+
+	if (isDec)
+		std::reverse(decimals.begin(), decimals.end());
+	else
+		std::reverse(integer.begin(), integer.end());
+
+	if (isDec)
+	{
+		while (decimals.size() > 0 && decimals[decimals.size() - 1] == 0)
+			decimals.pop_back();
+	}
+}
+
+
+
+
+
+
+
+// Alternative Subtraction Function
+void LNM::Alt_Subtract(std::vector<int> first, std::vector<int> second, bool isDec)
+{
+	if (first.size() > 0 || second.size() > 0)
+	{
+		if (isDec)
+		{
+			if (second.size() > first.size())
+				while (second.size() > first.size())
+					first.push_back(0);
+			else if (second.size() < first.size())
+				while (second.size() < first.size())
+					second.push_back(0);
+		}
+
+		if (isDec)
+		{
+			if (decimals.size() > 0)
+				decimals.clear();
+		}
+		else if (integer.size() > 0)
+			integer.clear();
+
+		int len = 0;
+		if (first.size() > second.size())
+		{
+			len = first.size();
+			if (isDec)
+			{
+				while (second.size() < first.size())
+					second.push_back(0);
+			}
+		}
+		else
+			len = second.size();
+
+		int carry = 0;
+		if (integer_carry > 0)
+			carry = integer_carry;
+
+		if (first.at(0) < 0 && !isDec)
+		{
+			first.at(0) *= -1;
+			sub_negative = true;
+		}
+
+		for (int i = 0; i < len; i++)
+		{
+			int v = 0;
+			if (i < first.size() && i < second.size())
+				v = first[first.size() - 1 - i] - second[second.size() - 1 - i] - carry;
+			else if (i < first.size())
+				v = first[first.size() - 1 - i] - carry;
+			else if (i < second.size())
+				v = second[second.size() - 1 - i] - carry;
+
+
+			if (v < 0)
+			{
+				v += 10;
+				carry = 1;
+			}
+			else
+				carry = 0;
+
+
+			if (isDec)
+				decimals.push_back(v);
+			else
+				integer.push_back(v);
+		}
+
+
+		if (carry > 0)
+		{
+			if (isDec)
+			{
+				integer_carry = carry;
+			}
+		}
+
+
+		if (!isDec)
+		{
+			while (integer.size() > 0 && integer[integer.size() - 1] == 0)
+				integer.pop_back();
+		}
+		if (isDec)
+			std::reverse(decimals.begin(), decimals.end());
+		else
+			std::reverse(integer.begin(), integer.end());
+
+		if (isDec)
+		{
+			while (decimals.size() > 0 && decimals[decimals.size() - 1] == 0)
+				decimals.pop_back();
+		}
+	}
 }
 
 
@@ -30,181 +250,33 @@ bool CheckForChar(std::string s, char c)
 /*-------------------
 | Addition Function |
 -------------------*/
-std::string LNM::Add(std::string first, std::string second)
+void LNM::Add(LNM obj, LNM& result)
 {
-	bool isNegative = false;
-	if (first[0] == '-' && second[0] == '-')
+	if (obj.sub_negative && sub_negative)
 	{
-		isNegative = true;
-		first.erase(0, 1);
-		second.erase(0, 1);
+		result.FlipSign();
+		result.Alt_Add(obj.decimals, decimals, true);
+		result.Alt_Add(obj.integer, integer, false);
 	}
-	else if (first[0] == '-' && second[0] != '-')
+	else if (obj.sub_negative && !sub_negative)
 	{
-		first.erase(0, 1);
-		return Subtract(second, first);
+		result.FlipSign();
+		sub_negative = true;
+		Subtract(obj, result);
 	}
-	else if (first[0] != '-' && second[0] == '-')
+	else if (!obj.sub_negative && sub_negative)
 	{
-		second.erase(0, 1);
-		return Subtract(first, second);
+		obj.sub_negative = true;
+		Subtract(obj, result);
 	}
-
-	// Count number of decimals for the first
-	int numOfDec_f = 0;
-	int numOfInts_f = 0;
-	int index = 0;
-	bool decPointStart = false;
-	while (index < first.length())
-	{
-		if (decPointStart)
-		{
-			numOfDec_f++;
-			index++;
-		}
-		else if (first[index] == '.')
-		{
-			decPointStart = true;
-			first.erase(index, 1);
-		}
-		else
-		{
-			numOfInts_f++;
-			index++;
-		}
-	}
-
-	// Count number of decimals for the second
-	int numOfDec_s = 0;
-	int numOfInts_s = 0;
-	index = 0;
-	decPointStart = false;
-	while (index < second.length())
-	{
-		if (decPointStart)
-		{
-			numOfDec_s++;
-			index++;
-		}
-		else if (second[index] == '.')
-		{
-			decPointStart = true;
-			second.erase(index, 1);
-		}
-		else
-		{
-			numOfInts_s++;
-			index++;
-		}
-	}
-
-	int finNumOfDecs = 0;
-	if (numOfDec_f > numOfDec_s)
-		finNumOfDecs = numOfDec_f;
-	else if (numOfDec_f < numOfDec_s)
-		finNumOfDecs = numOfDec_s;
 	else
-		finNumOfDecs = numOfDec_f;
-
-	std::string f = first;
-	std::string s = second;
-	std::string result = "";
-
-	int len;
-	if (numOfInts_f > numOfInts_s)
 	{
-		len = numOfInts_f - numOfInts_s;
-		std::string str = "";
-
-		for (int i = 0; i < len; i++)
-		{
-			str += '0';
-		}
-		s = str + s;
+		result.Alt_Add(obj.decimals, decimals, true);
+		result.Alt_Add(obj.integer, integer, false);
 	}
-	else if (numOfInts_f < numOfInts_s)
-	{
-		len = numOfInts_s - numOfInts_f;
-		std::string str = "";
-
-		for (int i = 0; i < len; i++)
-		{
-			str += '0';
-		}
-		f = str + f;
-	}
-
-	if (numOfDec_f > numOfDec_s)
-	{
-		len = numOfDec_f - numOfDec_s;
-		std::string str = "";
-
-		for (int i = 0; i < len; i++)
-		{
-			str += '0';
-		}
-		s = s + str;
-	}
-	else if (numOfDec_f < numOfDec_s)
-	{
-		len = numOfDec_s - numOfDec_f;
-		std::string str = "";
-
-		for (int i = 0; i < len; i++)
-		{
-			str += '0';
-		}
-		f = f + str;
-	}
-
-	len = f.length();
-	
-	int carry = 0;
-	int i = 0;
-	while (i < len)
-	{
-		int v1 = f[f.length() - 1 - i] - '0';
-		int v2 = s[s.length() - 1 - i] - '0';
-		int vf = v1 + v2 + carry;
-		std::string vs = std::to_string(vf);
-
-		if (vs.length() > 1)
-			carry = vs[0] - '0';
-		else
-			carry = 0;
-
-		if (i == finNumOfDecs && finNumOfDecs > 0)
-			result += '.';
-
-		result += vs[vs.length() - 1];
-
-		i++;
-	}
-
-	if (carry > 0)
-		result += std::to_string(carry);
-
-
-	// Shaves off zeros at the end of the decimals
-	while (result[0] == '0' && decPointStart)
-		result.erase(0, 1);
-	if (result[0] == '.')
-		result.erase(0, 1);
-
-
-	std::string RESULT = "";
-
-	if (isNegative)
-		RESULT += '-';
-
-	len = result.length();
-	for (i = len; i > 0; i--)
-	{
-		RESULT += result[i - 1];
-	}
-
-	return RESULT;
 }
+
+
 
 
 
@@ -215,244 +287,92 @@ std::string LNM::Add(std::string first, std::string second)
 /*----------------------
 | Subtraction Function |
 ----------------------*/
-std::string LNM::Subtract(std::string first, std::string second)
+void LNM::Subtract(LNM obj, LNM& result)
 {
-	if (first[0] == '-' && second[0] == '-')
-	{
-		first.erase(0, 1);
-		second.erase(0, 1);
+	if (sub_negative && obj.sub_negative)
+		result.FlipSign();
 
-		// swap
-		std::string tmp = first;
-		first = second;
-		second = tmp;
+	if (sub_negative && !obj.sub_negative)
+	{
+		obj.sub_negative = true;
+		Add(obj, result);
 	}
-	else if (first[0] == '-' && second[0] != '-')
+	else if (!sub_negative && obj.sub_negative)
 	{
-		return Add(first, "-" + second);
+		obj.sub_negative = false;
+		Add(obj, result);
 	}
-	else if (first[0] != '-' && second[0] == '-')
+	else if (integer.size() > obj.integer.size())
 	{
-		second.erase(0, 1);
-		return Add(first, second);
+		result.Alt_Subtract(decimals, obj.decimals, true);
+		result.Alt_Subtract(integer, obj.integer, false);
 	}
-
-
-
-	// Count number of decimals for the first
-	int numOfDec_f = 0;
-	int numOfInts_f = 0;
-	int index = 0;
-	bool decPointStart = false;
-	while (index < first.length())
+	else if (integer.size() < obj.integer.size())
 	{
-		if (decPointStart)
-		{
-			numOfDec_f++;
-			index++;
-		}
-		else if (first[index] == '.')
-		{
-			decPointStart = true;
-			first.erase(index, 1);
-		}
-		else
-		{
-			numOfInts_f++;
-			index++;
-		}
-	}
-
-	// Count number of decimals for the second
-	int numOfDec_s = 0;
-	int numOfInts_s = 0;
-	index = 0;
-	decPointStart = false;
-	while (index < second.length())
-	{
-		if (decPointStart)
-		{
-			numOfDec_s++;
-			index++;
-		}
-		else if (second[index] == '.')
-		{
-			decPointStart = true;
-			second.erase(index, 1);
-		}
-		else
-		{
-			numOfInts_s++;
-			index++;
-		}
-	}
-
-	int finNumOfDecs = 0;
-	if (numOfDec_f > numOfDec_s)
-		finNumOfDecs = numOfDec_f;
-	else if (numOfDec_f < numOfDec_s)
-		finNumOfDecs = numOfDec_s;
-	else
-		finNumOfDecs = numOfDec_f;
-
-
-
-	std::string f;
-	std::string s;
-	std::string result = "";
-	bool sIsBigger = false;
-
-	int len;
-	if (numOfInts_f > numOfInts_s)
-	{
-		f = first;
-		s = second;
-
-		len = numOfInts_f - numOfInts_s;
-		std::string str = "";
-
-		for (int i = 0; i < len; i++)
-		{
-			str += '0';
-		}
-		s = str + s;
-	}
-	else if (numOfInts_f < numOfInts_s)
-	{
-		f = second;
-		s = first;
-
-		// swap
-		int tmp = numOfDec_f;
-		numOfDec_f = numOfDec_s;
-		numOfDec_s = tmp;
-
-		tmp = numOfInts_f;
-		numOfInts_f = numOfInts_s;
-		numOfInts_s = tmp;
-
-		sIsBigger = true;
-		len = numOfInts_f - numOfInts_s;
-		std::string str = "";
-
-		for (int i = 0; i < len; i++)
-		{
-			str += '0';
-		}
-		s = str + s;
-	}
-	else if (isGreaterThan(second, first))
-	{
-		f = second;
-		s = first;
-
-		// swap
-		int tmp = numOfDec_f;
-		numOfDec_f = numOfDec_s;
-		numOfDec_s = tmp;
-
-		tmp = numOfInts_f;
-		numOfInts_f = numOfInts_s;
-		numOfInts_s = tmp;
-
-		sIsBigger = true;
+		result.FlipSign();
+		result.Alt_Subtract(obj.decimals, decimals, true);
+		result.Alt_Subtract(obj.integer, integer, false);
 	}
 	else
 	{
-		f = first;
-		s = second;
-	}
-
-
-	if (numOfDec_f > numOfDec_s)
-	{
-		len = numOfDec_f - numOfDec_s;
-		std::string str = "";
-
-		for (int i = 0; i < len; i++)
+		bool firstIsBigger = false;
+		bool secondIsBigger = false;
+		for (int i = 0; i < integer.size(); i++)
 		{
-			str += '0';
+			if (integer[i] < obj.integer[i])
+			{
+				secondIsBigger = true;
+				break;
+			}
+			else if (integer[i] > obj.integer[i])
+			{
+				firstIsBigger = true;
+				break;
+			}
 		}
-		s = s + str;
-	}
-	else if (numOfDec_f < numOfDec_s)
-	{
-		len = numOfDec_s - numOfDec_f;
-		std::string str = "";
 
-		for (int i = 0; i < len; i++)
+		if (!secondIsBigger && !firstIsBigger)
 		{
-			str += '0';
+			int len = 0;
+			if (decimals.size() > obj.decimals.size())
+				len = decimals.size();
+			else
+				len = obj.decimals.size();
+
+			if (decimals.size() > obj.decimals.size())
+				firstIsBigger = true;
+			else if (decimals.size() < obj.decimals.size())
+				secondIsBigger = true;
+			else if (decimals.size() > 0 && obj.decimals.size() > 0)
+			{
+				for (int i = 0; i < len; i++)
+				{
+					if (decimals[i] < obj.decimals[i])
+					{
+						secondIsBigger = true;
+						break;
+					}
+					else if (decimals[i] > obj.decimals[i])
+					{
+						firstIsBigger = true;
+						break;
+					}
+				}
+			}
 		}
-		f = f + str;
-	}
 
-	len = f.length();
-
-	int carry = 0;
-	int i = 0;
-	while (i < len)
-	{
-		int v1 = f[f.length() - 1 - i] - '0';
-		int v2 = s[s.length() - 1 - i] - '0';
-		int vf = v1 - v2 + carry;
-
-		if (vf < 0)
+		if (firstIsBigger)
 		{
-			carry = -1;
-			vf += 10;
+			result.Alt_Subtract(decimals, obj.decimals, true);
+			result.Alt_Subtract(integer, obj.integer, false);
 		}
-		else
-			carry = 0;
-
-		std::string vs = std::to_string(vf);
-
-		if (i == finNumOfDecs && finNumOfDecs > 0)
-			result += '.';
-		
-		result += vs[vs.length() - 1];
-
-		i++;
-	}
-
-
-	// Shaves off zeros at the end of the decimals
-	while (result[0] == '0' && decPointStart)
-		result.erase(0, 1);
-	if (result[0] == '.')
-		result.erase(0, 1);
-
-
-
-	std::string RESULT = "";
-	if (sIsBigger)
-		RESULT += "-";
-
-	len = result.length();
-	for (i = len; i > 0; i--)
-	{
-		RESULT += result[i - 1];
-	}
-
-	len = RESULT.length();
-	i = 0;
-	while (i < len)
-	{
-		if (RESULT[i] != '0' && RESULT[i] != '-')
-			break;
-		else if (RESULT[i] == '0' && RESULT[i + 1] != '.')
+		else if (secondIsBigger)
 		{
-			RESULT.erase(i, 1);
-			i = 0;
+			result.FlipSign();
+			result.Alt_Subtract(obj.decimals, decimals, true);
+			result.Alt_Subtract(obj.integer, integer, false);
 		}
-		else
-			i++;
 	}
-
-	if (RESULT == "")
-		return "0";
-
-	return RESULT;
 }
 
 
@@ -463,181 +383,101 @@ std::string LNM::Subtract(std::string first, std::string second)
 /*-------------------------
 | Multiplication Function |
 -------------------------*/
-std::string LNM::Multiply(std::string first, std::string second)
+void LNM::Multiply(LNM obj, LNM& result)
 {
-	bool isNegative = false;
-	if (first[0] == '-' && second[0] != '-')
-	{
-		isNegative = true;
-		first.erase(0, 1);
-	}
-	else if (first[0] != '-' && second[0] == '-')
-	{
-		isNegative = true;
-		second.erase(0, 1);
-	}
-	else if (first[0] == '-' && second[0] == '-')
-	{
-		first.erase(0, 1);
-		second.erase(0, 1);
-	}
+	if ( (!obj.sub_negative && sub_negative) || (obj.sub_negative && !sub_negative) )
+		result.sub_negative = true;
 
-	// Count number of decimals for the first
-	int numOfDec_f = 0;
-	int numOfInts_f = 0;
-	int index = 0;
-	bool decPointStart = false;
-	while (index < first.length())
-	{
-		if (decPointStart)
-		{
-			numOfDec_f++;
-			index++;
-		}
-		else if (first[index] == '.')
-		{
-			decPointStart = true;
-			first.erase(index, 1);
-		}
-		else
-		{
-			numOfInts_f++;
-			index++;
-		}
-	}
-
-	// Count number of decimals for the second
-	int numOfDec_s = 0;
-	int numOfInts_s = 0;
-	index = 0;
-	decPointStart = false;
-	while (index < second.length())
-	{
-		if (decPointStart)
-		{
-			numOfDec_s++;
-			index++;
-		}
-		else if (second[index] == '.')
-		{
-			decPointStart = true;
-			second.erase(index, 1);
-		}
-		else
-		{
-			numOfInts_s++;
-			index++;
-		}
-	}
-
-	int totNumOfDecs = numOfDec_f + numOfDec_s;
-
-
-	if (first.length() < second.length())
-	{
-		std::string tmp = first;
-		first = second;
-		second = tmp;
-	}
-
-	std::vector<std::string> nums;
-
+	LNM num("0");
+	LNM res("0");
 
 	int carry = 0;
-	for (int i = 0; i < second.length(); i++)
-	{
-		std::string n_num = "";
-		carry = 0;
-		for (int j = 0; j < first.length(); j++)
-		{
-			int v1 = first[first.length() - 1 - j] - '0';
-			int v2 = second[second.length() - 1 - i] - '0';
-			int vf = (v1 * v2) + carry;
-			std::string vs = std::to_string(vf);
+	int J = 0;
+	int I = 0;
 
-			if (vs.length() > 1)
-			{
-				carry = vs[0] - '0';
-				n_num += vs[1];
-			}
+	for (int i = 0; i < obj.integer.size() + obj.decimals.size(); i++)
+	{
+		J = 0;
+		std::vector<int> val;
+		for (int j = 0; j < integer.size() + decimals.size(); j++)
+		{
+			int v1 = 0;
+			int v2 = 0;
+
+			if (j < decimals.size())
+				v1 = decimals[decimals.size() - 1 - j];
 			else
 			{
-				carry = 0;
-				n_num += vs;
+ 				v1 = integer[integer.size() - 1 - J];
+				J++;
 			}
+
+			if (i < obj.decimals.size())
+				v2 = obj.decimals[obj.decimals.size() - 1 - i];
+			else
+				v2 = obj.integer[obj.integer.size() - 1 - I];
+
+			int v = v1 * v2 + carry;
+
+			carry = 0;
+			while (v > 9)
+			{
+				v -= 10;
+				carry++;
+			}
+
+			val.push_back(v);
 		}
 
 		if (carry > 0)
 		{
-			n_num += std::to_string(carry);
+			val.push_back(carry);
 			carry = 0;
 		}
 
-
-		std::string N_NUM = "";
-		int len = n_num.length();
-		for (int k = len; k > 0; k--)
+		while (val.size() > 0)
 		{
-			N_NUM += n_num[k - 1];
+			num.integer.push_back(val[val.size() - 1]);
+			val.pop_back();
 		}
 
-
-		// tack on zeros
 		for (int k = 0; k < i; k++)
-		{
-			N_NUM += '0';
-		}
+			num.integer.push_back(0);
 
-		nums.push_back(N_NUM);
+		res = res + num;
+		num.integer.clear();
+
+		if (i >= obj.decimals.size())
+			I++;
 	}
+	
+	int totInts = res.integer.size() - (obj.decimals.size() + decimals.size());
 
-	// Add all numbers in nums vector
-	std::string final_num = nums.back();
-	nums.pop_back();
-	while (nums.size() > 0)
+	if (totInts > 0)
 	{
-		final_num = Add(final_num, nums.back());
-		nums.pop_back();
+		for (int i = 0; i < totInts; i++)
+		{
+			if (res.integer.size() > 0)
+			{
+				result.integer.push_back(res.integer[0]);
+				res.integer.erase(res.integer.begin(), res.integer.begin() + 1);
+			}
+		}
 	}
-
-	std::string flip_result = "";
-	int i = 0;
-	bool decimalAdded = false;
-	while (i < final_num.length())
+	else
 	{
-		if (i == totNumOfDecs && !decimalAdded)
-		{
-			flip_result += '.';
-			decimalAdded = true;
-		}
-		else
-		{
-			flip_result += final_num[final_num.length() - i - 1];
-			i++;
-		}
+		for (int i = 0; i > totInts; i--)
+			result.decimals.push_back(0);
 	}
 
-	// Shaves off zeros at the end of the decimals
-	while (flip_result[0] == '0')
-		flip_result.erase(0, 1);
-	if (flip_result[0] == '.')
-		flip_result.erase(0, 1);
+	while (res.integer.size() > 0)
+	{
+		result.decimals.push_back(res.integer[0]);
+		res.integer.erase(res.integer.begin(), res.integer.begin() + 1);
+	}
 
-	std::string result = "";
-	for (i = flip_result.length(); i > 0; i--)
-		result += flip_result[i - 1];
-
-	while (result[0] == '0')
-		result.erase(0, 1);
-	if (result[0] == '.')
-		result.erase(0, 1);
-
-	if (result == "")
-		result = "0";
-	else if (isNegative)
-		return '-' + result;
-
-	return result;
+	while (result.decimals.size() > 0 && result.decimals[result.decimals.size() - 1] == 0)
+		result.decimals.pop_back();
 }
 
 
@@ -648,295 +488,145 @@ std::string LNM::Multiply(std::string first, std::string second)
 /*-------------------
 | Division Function |
 -------------------*/
-std::string LNM::Divide(std::string first, std::string second)
+void LNM::Divide(LNM obj, LNM& result)
 {
-	bool isNegative = false;
-	if (first[0] == '-' && second[0] != '-')
-	{
-		isNegative = true;
-		first.erase(0, 1);
-	}
-	else if (first[0] != '-' && second[0] == '-')
-	{
-		isNegative = true;
-		second.erase(0, 1);
-	}
-	else if (first[0] == '-' && second[0] == '-')
-	{
-		first.erase(0, 1);
-		second.erase(0, 1);
-	}
-
-
-	while (CheckForChar(first, '.') || CheckForChar(second, '.'))
-	{
-		first = Multiply(first, "10");
-		second = Multiply(second, "10");
-	}
-
-
-	bool isDecimal = false;
-	std::string result = "";
-
-	if (isNegative)
-		result = '-';
 	
-	std::string precCount = "0";
-
-	if (second.length() > first.length())
-	{
-		result += "0.";
-		isDecimal = true;
-		while (first.length() < second.length())
-		{
-			first += '0';
-		}
-	}
-
-	std::string in_val = "";
-	int i = 0;
-
-	while (in_val.length() < second.length() - 1)
-	{
-		in_val += first[i];
-		i++;
-	}
-
-	while (i < first.length())
-	{
-		if (in_val == "0")
-			in_val = first[i];
-		else
-			in_val += first[i];
-
-		int count = 0;
-		std::string tmp = in_val;
-		while (isGreaterThan(tmp, "0"))
-		{
-			tmp = Subtract(tmp, second);
-			count++;
-		}
-		if (isGreaterThan("0", tmp))
-			count--;
-
-		std::string str_count = std::to_string(count);
-		result += str_count;
-
-		in_val = Subtract(in_val, Multiply(str_count, second));
-
-		i++;
-
-		if (in_val != "0" && !(i < first.length()) && isGreaterThan(Subtract(precision, "1"), precCount))
-		{
-			first += '0';
-			if (!isDecimal)
-			{
-				result += ".";
-				isDecimal = true;
-			}
-			else
-				precCount = Add(precCount, "1");
-		}
-	}
-
-	// Removes all zeros in front of number
-	int len = result.length();
-	i = 0;
-	while (i < len)
-	{
-		if (result[i] != '0' && result[i] != '-')
-			break;
-		else if (result[i] == '0' && result[i + 1] != '.')
-		{
-			result.erase(i, 1);
-			i = 0;
-		}
-		else if (result[i + 1] != '.')
-			break;
-		else
-			i++;
-	}
-
-
-
-	return result;
 }
 
 
 
 
-bool LNM::isGreaterThan(std::string first, std::string second)
+
+bool LNM::isLessThan(LNM obj, bool init_bool)
 {
 	bool firstIsNegative = false;
 	bool secondIsNegative = false;
-	std::string intOfFirst = "";
-	std::string intOfSecond = "";
-	std::string decOfFirst = "";
-	std::string decOfSecond = "";
 
-	if (first[0] == '-')
+	if (integer.size() < obj.integer.size())
 	{
-		firstIsNegative = true;
-		first.erase(0, 1);
+		if (!obj.sub_negative)
+			return init_bool;
+
+		return !init_bool;
 	}
-
-	if (second[0] == '-')
+	else if (integer.size() > obj.integer.size())
 	{
-		secondIsNegative = true;
-		second.erase(0, 1);
+		if (!sub_negative)
+			return !init_bool;
+
+		return init_bool;
 	}
-
-	// Check for decimals
-
-
-	// Remove front zeros from first number
-	int len = first.length();
-	int i = 0;
-	while (i < len)
+	else
 	{
-		if (first[i] != '0' && first[i] != '-')
-			break;
-		else if (first[i] == '0' && first[i + 1] != '.')
+		bool firstIsBigger = false;
+		bool secondIsBigger = false;
+		if (integer.size() > 0 && obj.integer.size() > 0)
 		{
-			first.erase(i, 1);
-			i = 0;
+			for (int i = 0; i < integer.size(); i++)
+			{
+				if (integer[i] < obj.integer[i])
+				{
+					secondIsBigger = true;
+					break;
+				}
+				else if (integer[i] > obj.integer[i])
+				{
+					firstIsBigger = true;
+					break;
+				}
+			}
+
+			if (firstIsBigger && !sub_negative)
+				return !init_bool;
+			if (firstIsBigger && sub_negative)
+				return init_bool;
+			if (secondIsBigger && !obj.sub_negative)
+				return init_bool;
+			if (secondIsBigger && obj.sub_negative)
+				return !init_bool;
+
+			if (decimals.size() == 0 && obj.decimals.size() > 0)
+				return init_bool;
+			if (obj.decimals.size() == 0 && decimals.size() > 0)
+				return !init_bool;
+
+			int len = 0;
+			if (decimals.size() > obj.decimals.size())
+				len = obj.decimals.size();
+			else
+				len = decimals.size();
+
+			int i = 0;
+			while (i < len)
+			{
+				if (decimals[i] > obj.decimals[i])
+				{
+					firstIsBigger = true;
+					break;
+				}
+				if (decimals[i] < obj.decimals[i])
+				{
+					secondIsBigger = true;
+					break;
+				}
+			}
+
+			if (!firstIsBigger && !secondIsBigger)
+			{
+				if (decimals.size() > obj.decimals.size())
+					firstIsBigger = true;
+				else if (decimals.size() < obj.decimals.size())
+					secondIsBigger = true;
+			}
+
+			if (firstIsBigger && !sub_negative)
+				return !init_bool;
+			if (firstIsBigger && sub_negative)
+				return init_bool;
+			if (secondIsBigger && !sub_negative)
+				return init_bool;
+			else if (secondIsBigger && sub_negative)
+				return !init_bool;
 		}
-		else if (first[i + 1] != '.')
-			break;
-		else
-			i++;
-	}
-
-	// Remove front zeros from second number
-	len = second.length();
-	i = 0;
-	while (i < len)
-	{
-		if (second[i] != '0' && second[i] != '-')
-			break;
-		else if (second[i] == '0' && second[i + 1] != '.')
-		{
-			second.erase(i, 1);
-			i = 0;
-		}
-		else if (second[i + 1] != '.')
-			break;
-		else
-			i++;
-	}
-
-	// Split the integer and decimal of first
-	len = first.length();
-	i = 0;
-	while (i < len)
-	{
-		if (first[i] == '.')
-		{
-			intOfFirst = first;
-			decOfFirst = first;
-			intOfFirst.erase(i, first.length());
-			decOfFirst.erase(0, i);
-		}
-		i++;
-	}
-
-	if (decOfFirst == "")
-		intOfFirst = first;
-
-	// Split the integer and decimal of second
-	len = second.length();
-	i = 0;
-	while (i < len)
-	{
-		if (second[i] == '.')
-		{
-			intOfSecond = second;
-			decOfSecond = second;
-			intOfSecond.erase(i, second.length());
-			decOfSecond.erase(0, i);
-		}
-		i++;
-	}
-
-	if (decOfSecond == "")
-		intOfSecond = second;
-
-
-	// Check the integers
-	if (intOfFirst.length() > intOfSecond.length() && !firstIsNegative)
-		return true;
-
-	if (intOfFirst.length() > intOfSecond.length() && firstIsNegative)
-		return false;
-
-	if (intOfFirst.length() < intOfSecond.length() && !secondIsNegative)
-		return false;
-
-	if (intOfFirst.length() < intOfSecond.length() && secondIsNegative)
-		return true;
-
-	len = intOfFirst.length();
-	for (i = 0; i < len; i++)
-	{
-		int v1 = intOfFirst[i] - '0';
-		int v2 = intOfSecond[i] - '0';
-
-		if (v1 > v2 && !firstIsNegative)
-			return true;
-		if (v1 > v2 && firstIsNegative)
-			return false;
-		if (v1 < v2 && !secondIsNegative)
-			return false;
-		if (v1 < v2 && secondIsNegative)
-			return true;
-	}
-
-
-	// Check the decimals
-	if (decOfFirst == "" && decOfSecond == "")
-		return false;
-
-	// Remove zeros from back of decimal for first number
-	while (decOfFirst[decOfFirst.length() - 1] == '0')
-	{
-		decOfFirst.erase(decOfFirst.length() - 1);
-	}
-
-	while (decOfSecond[decOfSecond.length() - 1] == '0')
-	{
-		decOfSecond.erase(decOfSecond.length() - 1);
-	}
-
-	if (decOfFirst.length() > decOfSecond.length() && !firstIsNegative)
-		return true;
-
-	if (decOfFirst.length() > decOfSecond.length() && firstIsNegative)
-		return false;
-
-	if (decOfFirst.length() < decOfSecond.length() && !secondIsNegative)
-		return false;
-
-	if (decOfFirst.length() < decOfSecond.length() && secondIsNegative)
-		return true;
-
-	len = decOfFirst.length();
-	for (i = 0; i < len; i++)
-	{
-		int v1 = decOfFirst[i] - '0';
-		int v2 = decOfSecond[i] - '0';
-
-		if (v1 > v2 && !firstIsNegative)
-			return true;
-		if (v1 > v2 && firstIsNegative)
-			return false;
-		if (v1 < v2 && !secondIsNegative)
-			return false;
-		if (v1 < v2 && secondIsNegative)
-			return true;
 	}
 
 	return false;
-
 }
+
+
+
+
+
+
+
+
+bool LNM::isEqualTo(LNM obj)
+{
+	if (integer.size() > obj.integer.size())
+		return false;
+	if (integer.size() < obj.integer.size())
+		return false;
+	if (sub_negative != obj.sub_negative)
+		return false;
+	if (decimals.size() > obj.decimals.size())
+		return false;
+	if (decimals.size() < obj.decimals.size())
+		return false;
+
+	for (int i = 0; i < integer.size(); i++)
+	{
+		if (integer[i] > obj.integer[i] || integer[i] < obj.integer[i])
+			return false;
+	}
+
+	for (int i = 0; i < decimals.size(); i++)
+	{
+		if (decimals[i] > obj.decimals[i] || decimals[i] < obj.decimals[i])
+			return false;
+	}
+
+	return true;
+}
+
 
 
